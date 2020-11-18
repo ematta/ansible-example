@@ -1,0 +1,43 @@
+---
+- name: Add Docker
+  shell: amazon-linux-extras install docker -y
+  become: yes
+  tags:
+    - docker
+
+- name: Enable Docker service at startup
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tags:
+    - docker
+
+- name: Add user to docker
+  shell: usermod -a -G docker {{ item.user }}
+  become: yes
+  with_items:
+    - "{{ account_names }}"
+  tags:
+    - docker
+
+- name: Reboot machine
+  reboot:
+    test_command: 'whoami'
+    msg: "Reboot initiated by Ansible"
+    connect_timeout: 360
+  tags:
+    - docker
+
+- name: Get info on docker host
+  docker_host_info:
+    images: yes
+    verbose_output: yes
+  register: result
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tags:
+    - docker
+

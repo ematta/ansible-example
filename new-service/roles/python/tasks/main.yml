@@ -1,0 +1,77 @@
+---
+- name: Set up Python folder
+  file:
+    path: /var/python
+    state: directory
+    owner: "ec2-user"
+  become: yes
+  tags:
+    - python
+
+- name: Prep for Python 3.8
+  yum:
+    name:
+      - gcc
+      - openssl-devel
+      - bzip2-devel
+      - libffi-devel
+    state: present
+  become: yes
+  tags:
+    - python
+
+- name: Download and Extract Python 3.8
+  unarchive:
+    src: https://www.python.org/ftp/python/3.8.5/Python-3.8.5.tgz
+    dest: /var
+    remote_src: yes
+  become: yes
+  tags:
+    - python
+
+- name: Configure Python 3.8
+  shell: ./configure --enable-optimizations
+  args:
+    chdir: /var/Python-3.8.5
+  become: yes
+  tags:
+    - python
+
+- name: Make Python 3.8
+  make:
+    chdir: /var/Python-3.8.5
+    target: altinstall
+  become: yes
+  tags:
+    - python
+
+- name: Create a symbolic link for Python3.8
+  file:
+    src: /var/Python-3.8.5/python
+    dest: /usr/bin/python3
+    state: link
+  tags:
+    - python
+
+- name: Upgrade pip
+  shell: python3 -m pip install --upgrade pip
+  become: yes
+  tags:
+    - python
+
+- name: Install pip packages
+  shell: python3 -m pip install {{ item }}
+  become: yes
+  with_items: 
+    - "docker"
+    - "docker-compose"
+  tags:
+    - python
+
+- name: Reboot machine
+  reboot:
+    test_command: 'whoami'
+    msg: "Reboot initiated by Ansible"
+    connect_timeout: 360
+  tags:
+    - python

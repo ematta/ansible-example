@@ -1,0 +1,23 @@
+---
+- name: Update Amazon Linux
+  yum:
+    name: '*'
+    state: latest
+    update_only: yes
+  become: yes
+  tags:
+    - linux
+
+- name: Install packages
+  yum:
+    name: git
+    state: latest
+  become: yes
+  tags:
+    - linux
+
+- name: Add extras repository
+  shell: yum-config-manager --enable extras
+  become: yes
+  tags:
+    - linux
